@@ -8,6 +8,7 @@ Created on Tue Mar 14 15:41:42 2017
 
 from __future__ import print_function
 import os
+import glob
 import gc
 import numpy as np
 import matplotlib.pyplot as plt
@@ -257,10 +258,28 @@ def read_hdf_data(name='waldorf.hdf5', data_dir=os.path.join("data", "waldorf"))
     return x_values, y_values, shape
 
 
+
+
+def merge_split_file(data_dir="../data/waldorf", color_channel='Red'):
+    
+    mat_file = os.path.join(data_dir, color_channel + '.mat')
+    if os.path.exists(mat_file):
+        return
+    
+    with open(mat_file, "wb") as outfile:
+        for f in glob.iglob(os.path.join(data_dir, color_channel + '.mat.*')):
+            with open(f, 'rb') as file:
+                outfile.write(file.read())
+
+
 def read_data_and_convert(data_dir=os.path.join("../data", "waldorf"), transform=None):
 
     gc.collect()
+    
+    # if the files are checked in, but not merged do so
+    [merge_split_file(data_dir=data_dir, color_channel=c) for c in ['Red', 'Green', 'Blue']]
 
+    # download (if needed) and get the file names
     filenames = download_data()
     rgb, shape = read_data_rgb(data_dir, filenames, transform)
     return create_x_values(rgb, shape)
