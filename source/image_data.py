@@ -218,7 +218,7 @@ def create_x_values(rgb, shape):
 # Matthew O'Toole and Kiriakos N. Kutulakos. 2010. Optical computing for fast light transport analysis.
 # ACM Trans. Graph. 29, 6, Article 164 (December 2010), 12 pages. DOI: https://doi.org/10.1145/1882261.1866165
 
-def download_data(data_dir=os.path.join("data", "waldorf")):
+def download_data(data_dir=os.path.join("../data", "waldorf")):
 
     red = str("Red.mat")
     green = str("Green.mat")
@@ -280,7 +280,7 @@ def read_data_and_convert(data_dir=os.path.join("../data", "waldorf"), transform
     [merge_split_file(data_dir=data_dir, color_channel=c) for c in ['Red', 'Green', 'Blue']]
 
     # download (if needed) and get the file names
-    filenames = download_data()
+    filenames = download_data(data_dir=data_dir)
     rgb, shape = read_data_rgb(data_dir, filenames, transform)
     return create_x_values(rgb, shape)
 
@@ -290,6 +290,8 @@ def read_data(data_dir=os.path.join("../data", "waldorf"),
               transform=None, train=0.8, validation=0.1, test=0.1):
 
     gc.collect()
+
+    print(data_dir)
 
     filename = 'RGBDATA.hdf5'
     if transform is not None:
