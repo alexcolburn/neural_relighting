@@ -24,8 +24,7 @@ from tensorflow.python.keras.callbacks import EarlyStopping
 from tensorflow.python.keras import regularizers
 
 import matplotlib.pyplot as plt
-
-from source import image_data
+import image_data
 
 
 # image utilities
