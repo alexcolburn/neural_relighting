@@ -361,8 +361,8 @@ class IBR_Model(object):
             json_file.write(model_json)
 
 
-def run():
-    data = image_data.read_data(transform=exposure_compensate4_22, train=0.5, validation=0.1, test=0.4)
+def run(data_dir=os.path.join("../data", "waldorf")):
+    data = image_data.read_data(data_dir=data_dir,transform=exposure_compensate4_22, train=0.5, validation=0.1, test=0.4)
     IBR = IBR_Model(data)
     IBR.train(fn=train_per_pixel_model, epochs=5, batch_size=50000)
     return IBR
