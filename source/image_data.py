@@ -266,8 +266,12 @@ def merge_split_file(data_dir="../data/waldorf", color_channel='Red'):
     if os.path.exists(mat_file):
         return
     
+    chunks = list(glob.iglob(os.path.join(data_dir, color_channel + '.mat.*')))
+    if not chunks:
+        return
+    
     with open(mat_file, "wb") as outfile:
-        for f in glob.iglob(os.path.join(data_dir, color_channel + '.mat.*')):
+        for f in chunks:
             with open(f, 'rb') as file:
                 outfile.write(file.read())
 
