@@ -287,10 +287,10 @@ class IBR_Model(object):
         if self._data is None:
             return None
         
-        x_values, y_truth = dataset.get_data_slice(idx)
+        x_values, y_truth = dataset.get_data_slice(idx)        
+        y_truth = y_truth.astype(np.float32)
     
-
-        y_pred = self._model.predict(x_values)
+        y_pred = self._model.predict(x_values).astype(np.float32)
             
         if not display:
             return y_pred

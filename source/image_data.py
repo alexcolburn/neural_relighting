@@ -83,7 +83,7 @@ class DataSet(object):
             title = "Image #" + str(self._original_index[i])
 
         plt.xlabel(title, fontsize=18)
-        plt.imshow(sub)
+        plt.imshow(sub.astype(np.float32))
 
 
     def plot_prediction(self, prediction, title=None, exposure=2.0, gamma=2.2):
@@ -91,7 +91,7 @@ class DataSet(object):
         plt.figure(figsize=(10, 10))
         if title is not None:
             plt.xlabel(title, fontsize=18)
-        plt.imshow(sub)
+        plt.imshow(sub.astype(np.float32))
 
 
     def get_data_slice(self, idx):
