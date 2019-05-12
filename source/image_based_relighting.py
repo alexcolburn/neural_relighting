@@ -1,17 +1,26 @@
-#!/usr/bin/env python2
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Mar 15 11:39:54 2017
+# Copyright 2019 Alex Colburn
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-@author: alexco
+"""
+Implements basic file network training, metrics, and visualization
 """
 
 from __future__ import print_function
 
 import os
 import threading
-os.environ["CUDA_VISIBLE_DEVICES"] = str(0)
 
+os.environ["CUDA_VISIBLE_DEVICES"] = str(0)
 
 import numpy as np
 
@@ -67,6 +76,7 @@ class threadsafe_iter:
     """Takes an iterator/generator and makes it thread-safe by
     serializing call to the `next` method of given iterator/generator.
     """
+
     def __init__(self, it):
         self.it = it
         self.lock = threading.Lock()
@@ -86,8 +96,10 @@ class threadsafe_iter:
 def threadsafe_generator(f):
     """A decorator that takes a generator function and makes it thread-safe.
     """
+
     def g(*a, **kw):
         return threadsafe_iter(f(*a, **kw))
+
     return g
 
 
@@ -97,10 +109,9 @@ def create_per_pixel_model(input_size, output_size,
                            dropout=0.0,
                            bn=False,
                            leaky=False):
-
     ar = regularizers.l2(1e-6)
-    kr = None # regularizers.l2(1e-6)
-    br = None # regularizers.l2(1e-6)
+    kr = None  # regularizers.l2(1e-6)
+    br = None  # regularizers.l2(1e-6)
 
     def create_block(source):
         block = Dense(n_hidden, activation=activation,
@@ -125,10 +136,8 @@ def create_per_pixel_model(input_size, output_size,
                   kernel_regularizer=kr,
                   bias_regularizer=br)(inputs)
 
-
         for i in range(n_layers):
             b = create_block(b)
-
 
         output = Dense(output_size, activation='relu')(b)
         model = Model(inputs=[inputs], outputs=[output])
@@ -147,7 +156,6 @@ def update_history(history, update):
 
 @threadsafe_generator
 def data_generator(data, idx, batch_size, b_train=True):
-
     x_train = data.train.x_values
     y_train = data.train.y_values
     x_val = data.validation.x_values
@@ -188,7 +196,6 @@ def data_generator(data, idx, batch_size, b_train=True):
 
 
 def train_per_pixel_model(data, epochs=1000, batch_size=5000, batch_reductions=4, initial_lrate=0.001):
-
     num_train_examples = data.train.x_values.shape[0]
     num_validation_examples = data.validation.x_values.shape[0]
 
@@ -202,7 +209,7 @@ def train_per_pixel_model(data, epochs=1000, batch_size=5000, batch_reductions=4
         return K.sqrt(sum_err_sqr / sum_val_sqr)
 
     def luminance(rgb):
-        return K.sqrt(0.299 * K.square(rgb[:,0]) + 0.587 * K.square(rgb[:,1]) + 0.114 * K.square(rgb[:,2]))
+        return K.sqrt(0.299 * K.square(rgb[:, 0]) + 0.587 * K.square(rgb[:, 1]) + 0.114 * K.square(rgb[:, 2]))
 
     def my_loss(y_true, y_pred):
 
@@ -265,10 +272,6 @@ def train_per_pixel_model(data, epochs=1000, batch_size=5000, batch_reductions=4
     return model, history
 
 
-
-
-
-
 class IBR_Model(object):
 
     def __init__(self, data):
@@ -278,27 +281,26 @@ class IBR_Model(object):
 
     def train(self, fn=train_per_pixel_model, epochs=10, batch_size=100000):
         self._model, self._history = fn(self._data, epochs, batch_size)
-        
+
     def reconstruct_image(self, dataset, idx, exposure=1, gamma=1, display=True):
 
         if self._model is None:
             return None
-        
+
         if self._data is None:
             return None
-        
-        x_values, y_truth = dataset.get_data_slice(idx)        
+
+        x_values, y_truth = dataset.get_data_slice(idx)
         y_truth = y_truth.astype(np.float32)
-    
+
         y_pred = self._model.predict(x_values).astype(np.float32)
-            
+
         if not display:
             return y_pred
-    
-    
+
         dataset.plot_prediction(y_pred, title="Prediction", exposure=exposure, gamma=gamma)
         dataset.plot_y_values(idx, exposure=exposure, gamma=gamma)
-    
+
         mse = np.mean(np.square(y_pred - y_truth))
         maxe = np.max(np.abs(y_pred - y_truth))
         mape = np.mean(np.square(y_pred - y_truth) / (np.abs(y_truth) + 1e-6))
@@ -306,27 +308,27 @@ class IBR_Model(object):
         mape_image = np.log(mape_image + 1.0)
         max_mape_pixel = np.max(mape_image)
         mape_image /= max_mape_pixel
-    
-        relative_err = relative_err_numpy(y_truth,y_pred)
-    
+
+        relative_err = relative_err_numpy(y_truth, y_pred)
+
         mse_image = np.square(y_truth - y_pred)
         mse_image = np.log(mse_image + 1.0)
         max_mse_pixel = np.max(mse_image)
         mse_image /= max_mse_pixel
-    
+
         dataset.plot_prediction(mse_image, title="LOG(MSE)", exposure=0, gamma=1)
         dataset.plot_prediction(mape_image, title="LOG(MAPE)", exposure=0, gamma=1)
-    
+
         difference = np.abs(y_pred - y_truth)
         maxval = np.max(np.max(difference)) + 1e-10
         difference /= maxval
-    
+
         # convert to image space 0 - 1
         f = dataset.to_image(y_pred, exposure, gamma)
         y_truth = dataset.to_image(y_truth, exposure, gamma)
-    
+
         difference = dataset.to_image(difference, exposure=0, gamma=1.0)
-    
+
         fig, axarr = plt.subplots(1, 3)
         fig.set_size_inches(15, 7)
         axarr[0].imshow(f, interpolation='nearest')
@@ -334,13 +336,13 @@ class IBR_Model(object):
                            str("\nMAX abs(E) ") + str(maxe) +
                            str("\nMAPE ") + str(mape) +
                            str("\nRelative ") + str(relative_err))
-    
+
         axarr[1].imshow(y_truth, interpolation='nearest')
         axarr[1].set_title('Original')
-    
+
         axarr[2].imshow(difference, interpolation='nearest')
         axarr[2].set_title('Difference\n' + 'x' + str(1.0 / maxval))
-    
+
         return y_pred
 
     def load_model(self, filename="keras_model"):
@@ -361,9 +363,8 @@ class IBR_Model(object):
 
 
 def run(data_dir=os.path.join("../data", "waldorf")):
-    data = image_data.read_data(data_dir=data_dir,transform=exposure_compensate4_22, train=0.5, validation=0.1, test=0.4)
+    data = image_data.read_data(data_dir=data_dir, transform=exposure_compensate4_22, train=0.5, validation=0.1,
+                                test=0.4)
     IBR = IBR_Model(data)
     IBR.train(fn=train_per_pixel_model, epochs=5, batch_size=50000)
     return IBR
-
-
