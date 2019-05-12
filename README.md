@@ -1,15 +1,16 @@
-# Image Based Relighting Using Neural Networks
 <img style="float: center;" src=./documents/waldorf_example.png>
-This is a simple implementation of image based relighting using deep networks.
 
-The goal is to predict how a single scene looks under different lighting conditions given a few sample lighting conditions.  We have a sparse training set (ideally, 200+ images) with no augmentation and want to predict the scene under unseen lighting conditions.
+# Image Based Relighting Using Neural Networks
 
-This work is inspired by Ren et al. [Image Based Relighting Using Neural Networks](https://www.microsoft.com/en-us/research/video/image-based-relighting-using-neural-networks-2/).  We (by we I mean Yue Liu) implemented a version of their system as a baseline. Their hierarchical divide and conquer method of breaking the learning problem down into small digestible chunks the ensemble reconstruction model, and the distributed learning framework was a challenge to reproduce when you don't have a computer cluster for training.  To their credit, they probably didn't have fast GPUs at the time.
+A simple implementation of image based relighting using deep networks.
+
+The goal of image based relighting is to predict how a single scene looks under different lighting conditions given a few sample lighting conditions. We are learning the light transport function of a scene with a sparse training set (ideally, 200+ images).  Once the network learns the light transport function, it can predict the scene under unseen lighting conditions - within reason.
+
+This work is inspired by Ren et al. [Image Based Relighting Using Neural Networks](https://www.microsoft.com/en-us/research/video/image-based-relighting-using-neural-networks-2/).  We (by we I mean [Yue Liu](https://github.com/yueAUW/neural-daylighting)) implemented a version of their system as a baseline. Their hierarchical divide and conquer method of breaking the learning problem down into small digestible chunks, the ensemble reconstruction model, and the distributed learning framework was a challenge to reproduce when you don't have a computer cluster for training.  They probably didn't have fast GPUs at the time, and the distributed network was probably the only way to train in a reasonable amount time.
 
 Xu et al. [Deep Image-Based Relighting from Optimal Sparse Samples](https://dl.acm.org/citation.cfm?doid=3197517.3201313) is a great approach taking the idea much further utilizing synthetic data.
 
-
-The main idea behind this work is that we can implement a deep network with approximately the same number of parameters as Ren et al., using a simpler structure, and be able train the model quickly on a single machine. Initially we tried the Ren et al approach on architectural images, and it did not work for a variety of reasons. [Computing Long-term Daylighting Simulations from High Dynamic Range Imagery Using Deep Neural Networks](https://www.ashrae.org/File%20Library/Conferences/Specialty%20Conferences/2018%20Building%20Performance%20Analysis%20Conference%20and%20SimBuild/Papers/C018.pdf) 
+The main idea behind this work is that we can implement a deep network with approximately the same number of parameters as Ren et al., using a simpler structure, and train the model quickly (hours) on a single machine.  Image prediction takes seconds to perform. Initially we tried the Ren et al approach on architectural images, and it did not work for a variety of reasons. [Computing Long-term Daylighting Simulations from High Dynamic Range Imagery Using Deep Neural Networks](https://www.ashrae.org/File%20Library/Conferences/Specialty%20Conferences/2018%20Building%20Performance%20Analysis%20Conference%20and%20SimBuild/Papers/C018.pdf) 
 details some of the reasons and provides interesting solutions.
 
 ## Network structure
@@ -67,4 +68,7 @@ The Waldorf and Bull models are Mathew O'Toole's, and used in [Optical Computing
 ## Implementation notes
 
 The training procedure utilizes the standard reduce learning on plateau convention.  I added the additional iteration of reducing the batch size because I found that I could increase the overall accuracy of the predictions. 
+
+-Alex
+
 
