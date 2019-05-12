@@ -1,12 +1,10 @@
 # Image Based Relighting Using Neural Networks
 <img style="float: center;" src=./documents/waldorf_example.png>
-This project is a simple implementation of image based relighting using deep networks.
+This is a simple implementation of image based relighting using deep networks.
 
-The goal is to predict how a scene looks under different lighting conditions given a few sample lighting conditions.  We have a sparse training set (ideally, 200+ images) with no augmentation to predict a single scene under unseen lighting conditions.
+The goal is to predict how a single scene looks under different lighting conditions given a few sample lighting conditions.  We have a sparse training set (ideally, 200+ images) with no augmentation and want to predict the scene under unseen lighting conditions.
 
-Much of this work is inspired by Ren et al. [Image Based Relighting Using Neural Networks](https://www.microsoft.com/en-us/research/video/image-based-relighting-using-neural-networks-2/).
-
-However, their work is somewhat complicated to implement due to their hierarchical divide and conquer method of breaking the learning problem down into small digestible chunks, the ensemble reconstruction model, and distributed learning framework.  To their credit, they probably didn't have fast GPUs at the time.
+This work is inspired by Ren et al. [Image Based Relighting Using Neural Networks](https://www.microsoft.com/en-us/research/video/image-based-relighting-using-neural-networks-2/). When we tried to implement a version of their system as a baseline, we found that that it wasn't easy to reproduce. Their hierarchical divide and conquer method of breaking the learning problem down into small digestible chunks, the ensemble reconstruction model, and the distributed learning framework was a challenge to reproduce when you don't have a computer cluster for training.  To their credit, they probably didn't have fast GPUs at the time.
 
 Xu et al. [Deep Image-Based Relighting from Optimal Sparse Samples](https://dl.acm.org/citation.cfm?doid=3197517.3201313) is a great approach taking the idea much further utilizing synthetic data.
 
@@ -24,10 +22,10 @@ The key to success of this approach is due to three factors:
 3. Data sampling during training  
 
 ### Loss
-Normaly one might just use an MSE loss on the RGB image, and call it a day.  In reality, this tends to cause problems where one channel gets stuck in a local minima resulting in zero-value predictions. resulting in an entirely black prediction channel.  This problem can be solved by using the natural cross-correlation betweeen RGB channels to form a joint loss term.  I did this via a luminance channel loss. Another usefull loss for this sort of image data is the relative error, as it is a typical metric used to validate image reconstruction. 
+Normaly one might just use an MSE loss on the RGB image, and call it a day.  In reality, this tends to cause problems where one channel gets stuck in a local minima resulting in zero-value predictions, resulting in an entirely black prediction channel.  This problem can be solved by using the natural cross-correlation betweeen RGB channels to form a joint loss term.  I did this via a luminance channel loss. Another usefull loss for this sort of image data is the relative error, as it is a typical metric used to validate image reconstruction. 
 
 ### Data Normalizaton
-The original data is calibrated HDR imagery. It has a high dynamic range, with most of the values falling in a very small range.  In order to make the distribution learnable, we need to tranform the data into more evenly over a range.  A log transform works well for this purpose,  I did this by initially scaling the data to a 0 to 1 range, applying an exposure compensation, and rescaling.  
+The original data is calibrated HDR imagery. It has a high dynamic range, with most of the values falling in a very small range.  In order to make the distribution learnable, we need to tranform the data more evenly over a range.  A log transform works well for this purpose,  I did this by initially scaling the data to a 0 to 1 range, applying an exposure compensation, and rescaling.  
 
 ### Data sampling
 This is where things become more interesting. At this point, one might be asking why use a Dense layers rather than a typical conv net architecture?
@@ -50,7 +48,7 @@ An identical architecture formulated as 1x1 2D kernels fails to produce good res
 
 
 
-## Example results
+## Example results from the dense network architecture
 
 <img style="float: center;" src=./documents/waldorf_example.png>
 
@@ -58,9 +56,9 @@ An identical architecture formulated as 1x1 2D kernels fails to produce good res
 
 This data was captured from photographs, so you do see camera sensor noise and focus effects.  The network reproduces these effects as well as find detail off shadows quite well.  The relative error of 5% or 6% is consistent with Ren et al. and is probably the noise floor for this exposure setting.
 
-The Waldorf and Bull models are Mathew O'Toole's used from Optical Computing for [Fast Light Transport Analysis](http://www.cs.cmu.edu/~motoole2/opticalcomputing.html).
+The Waldorf and Bull models are Mathew O'Toole's, and used in [Optical Computing for Fast Light Transport Analysis](http://www.cs.cmu.edu/~motoole2/opticalcomputing.html).  The git repo contains these two data sets broken up into smaller sized binary chunks.
 
-[The demo notebook](demo.ipynb") shows shows how to train a model and view the results.
+[The demo notebook](demo.ipynb") shows shows how to train a model and view the results.  I reccomend experimenting with Spyder, trying out different network architectures, losses, and data normalization.
 
 ## Implimentation notes
 

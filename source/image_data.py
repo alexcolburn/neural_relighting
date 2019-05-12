@@ -12,6 +12,7 @@ import glob
 import gc
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy import ndimage
 import tables
 import collections
 import wget
@@ -102,6 +103,18 @@ class DataSet(object):
         x_values = self._x_values[offset:(offset + dim), :]
         y_values = self._y_values[offset:(offset + dim), :]
         return x_values, y_values
+    
+    
+    def gradient_image(self, image):
+        # Get x-gradient in "sx"
+        sx = ndimage.sobel(image.astype(np.float32).reshape((self._shape[0], self._shape[1], 3)),axis=0,mode='constant')
+        # Get y-gradient in "sy"
+        sy = ndimage.sobel(image.astype(np.float32).reshape((self._shape[0], self._shape[1], 3)),axis=1,mode='constant')
+        # Get square root of sum of squares
+        sobel=np.hypot(sx,sy)
+        sobel /= np.max(sobel)
+        
+        return sobel.reshape(image.shape)
 
 
     def image_indices(self, indices):
@@ -144,6 +157,7 @@ def hdr_to_image(RGBColor, exposure, gamma, clip=True):
         RGB[RGB > 1.0] = 1.0
 
     return RGB
+
 
 
 def read_full_data(filename, max_value=None):
