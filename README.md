@@ -24,18 +24,23 @@ The key to success of this approach is due to three factors:
 3. Data sampling during training  
 
 ### Loss
-Normaly one might just use an MSE loss on the RGB image, and call it a day.  In reality, this tends to cause problems where one channel gets stuck in valley resulting in zero-value predictions. resulting in an entirely black prediction channel.  One way out of this problem is to tie the seperate RGB channels together with a loss term.  I did this via a luminance channel loss. Another usefull loss for this sort of image data is the relative error.   
+Normaly one might just use an MSE loss on the RGB image, and call it a day.  In reality, this tends to cause problems where one channel gets stuck in a local minima resulting in zero-value predictions. resulting in an entirely black prediction channel.  This problem can be solved by using the natural cross-correlation betweeen RGB channels to form a joint loss term.  I did this via a luminance channel loss. Another usefull loss for this sort of image data is the relative error, as it is a typical metric used to validate image reconstruction. 
 
 ### Data Normalizaton
-The original data is calibrated HDR imagery. It has a high dynamic range, with most of the values falling in a very small range.  In order to make the distribution learnable, we need to tranform the data into a wider distribution.  I did this by initially scaling the data to a 0 to 1 range, applying an exposure compensation, and rescaling.
+The original data is calibrated HDR imagery. It has a high dynamic range, with most of the values falling in a very small range.  In order to make the distribution learnable, we need to tranform the data into more evenly over a range.  A log transform works well for this purpose,  I did this by initially scaling the data to a 0 to 1 range, applying an exposure compensation, and rescaling.  
 
 ### Data sampling
 This is where things become more interesting. At this point, one might be asking why use a Dense layers rather than a typical conv net architecture?
 
- The answer lies in data bias.  The images are rather large, at 696x464 pixels, a batch size on my machine is 5 images.  Each batch consists of only 5 lighting positions, and this doesn't represent the training data very well, both in terms of input values such as lighting position, but also the resulting image.  When we compare the feature distribution of two batches of equal data size consisting of 64x64 and 1x1 pixel windows, the smaller window size much better represents the range of input values.  The plots below show the distribution of two features correponding to light and pixel positions.
+ The answer lies in induced data bias while training.  The images are rather large, at 696x464 pixels, a batch size on my machine is 5 images.  Each batch consists of only 5 lighting positions, and this doesn't represent the training data very well, both in terms of input values such as lighting position, but also the resulting image.  When we compare the feature distribution of two batches of equal data size, the batch with a smaller window size much better represents the range of input values.  The plots below compare feature distribution of a single batch of window sizes of 64x64 and 1x1. The features 0 and 2 correpond to light and pixel positions respectively.
 
 <img style="float: center;" src=./documents/features_0_per_batch.png>
 <img style="float: center;" src=./documents/features_2_per_batch.png>
+
+The sample problem occurs for the image data we are trying to predict.  The 1x1 window has a much different distribution than the 64x64 window, and much more closely matches the overall
+sample distribution.
+
+<img style="float: center;" src=./documents/yfeatures_0_per_batch.png>
 
 
 In a dense architecture, both the lighting positions and pixel positions are randomly distributed from the entire training set, leading to better convergence and prediction results.
@@ -56,3 +61,8 @@ This data was captured from photographs, so you do see camera sensor noise and f
 The Waldorf and Bull models are Mathew O'Toole's used from Optical Computing for [Fast Light Transport Analysis](http://www.cs.cmu.edu/~motoole2/opticalcomputing.html).
 
 [The demo notebook](demo.ipynb") shows shows how to train a model and view the results.
+
+## Implimentation notes
+
+The training procedure is the standard reduce learning on platuea.  I added the additional iteration of reducing the batch size becuase I found that I could increase the overall accuracy of the predictions. 
+
