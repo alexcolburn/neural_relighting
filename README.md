@@ -16,7 +16,7 @@ The main idea behind this work is that we can implement a deep network with appr
 
 The network structure in this example is simply several Dense layers with relu activations.  The input to the network, like Ren et al. is a vector consisting of the average image (this could be several salient images as in other work, both work just fine), each pixel position, and the light position in normalized coordinates.  The output is the predicted RGB pixel color.
 
-The key to success of this approach is due to three factors: 
+The success of this approach is due to three factors: 
 1. Loss functions
 2. Data normalizaton
 3. Data sampling during training  
