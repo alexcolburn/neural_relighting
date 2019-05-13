@@ -8,7 +8,7 @@ The goal of image based relighting is to predict how a single scene looks under 
 
 This work is inspired by Ren et al. [Image Based Relighting Using Neural Networks](https://www.microsoft.com/en-us/research/video/image-based-relighting-using-neural-networks-2/).  We (by we I mean [Yue Liu](https://github.com/yueAUW/neural-daylighting)) implemented a version of their system as a baseline. Their hierarchical divide and conquer method of breaking the learning problem down into small digestible chunks, the ensemble reconstruction model, and the distributed learning framework was a challenge to reproduce when you don't have a computer cluster for training.  They probably didn't have fast GPUs at the time, and the distributed network was probably the only way to train in a reasonable amount time.
 
-Xu et al. [Deep Image-Based Relighting from Optimal Sparse Samples](https://dl.acm.org/citation.cfm?doid=3197517.3201313) is a great approach taking the idea much further utilizing synthetic data.
+Xu et al. [Deep Image-Based Relighting from Optimal Sparse Samples](https://dl.acm.org/citation.cfm?doid=3197517.3201313) is a great approach taking the idea much further utilizing synthetic data.  Unlike this single scene solution, this approach does not learn any global structure and non-local cast shadows.
 
 The main idea behind this work is that we can implement a deep network with approximately the same number of parameters as Ren et al., using a simpler structure, and train the model quickly (hours) on a single machine.  Image prediction takes seconds to perform. Initially we tried the Ren et al approach on architectural images, and it did not work for a variety of reasons. [Computing Long-term Daylighting Simulations from High Dynamic Range Imagery Using Deep Neural Networks](https://www.ashrae.org/File%20Library/Conferences/Specialty%20Conferences/2018%20Building%20Performance%20Analysis%20Conference%20and%20SimBuild/Papers/C018.pdf) 
 details some of the reasons and provides interesting solutions.
@@ -36,7 +36,7 @@ The original data is calibrated HDR imagery. It has a high dynamic range, with m
 
 This is where things become more interesting. At this point, one might be asking why use a Dense layers rather than a typical conv net architecture?
 
-The answer lies in induced data bias while training.  The images are rather large, at 696x464 pixels, a batch size on my machine is 1 or 2 images.  Each batch consists of only a few lighting positions.  This doesn't represent the training data both in terms of input values such as lighting position or the resulting image.  When we compare the feature distribution of two batches of equal data size, the batch with a smaller window size much better represents the range of input values.  The plots below compare feature distribution of a single batch of window sizes of 64x64 and 1x1. The features 0 and 2 correspond to light and pixel positions respectively.
+The answer lies with the data bias while training.  The images are rather large, at 696x464 pixels, a batch size on my machine is 1 image.  Each batch consists of only a single lighting position, or a few lighting positions if we modify the network to take a smaller image window.  The small batch doesn't represent the training data both in terms of input values such as lighting position or the resulting image.  When we compare the feature distribution of two batches of equal data size, the batch with a smaller window size much better represents the range of input values.  The plots below compare feature distribution of a single batch of window sizes of 64x64 and 1x1. The features 0 and 2 correspond to light and pixel positions respectively.
 
 <img style="float: center;" src=./documents/features_0_per_batch.png>
 <img style="float: center;" src=./documents/features_2_per_batch.png>
@@ -50,6 +50,7 @@ In a dense architecture, both the lighting positions and pixel positions are ran
 
 An identical architecture formulated as 1x1 2D kernels fails to produce good results with the entire image as an input.  As we change the input to smaller windows, the loss becomes similar to the dense net architecture as the window size is reduced to a 3x3 window.  
 
+But isn't SGD supposed to work with small batch sizes? [Uhm, yes](https://datascience.stackexchange.com/questions/16807/why-mini-batch-size-is-better-than-one-single-batch-with-all-training-data), however in this case the gradients are too noisy for the Adam optimizer to perform well. One option is accumulate gradients for several batches before backprop. 
 
 
 
@@ -67,7 +68,7 @@ The Waldorf and Bull models are Mathew O'Toole's, and used in [Optical Computing
 
 ## Implementation notes
 
-The training procedure utilizes the standard reduce learning on plateau convention.  I added the additional iteration of reducing the batch size because I found that I could increase the overall accuracy of the predictions. 
+The training procedure utilizes the standard reduce learning on plateau convention.  I added the additional iteration of reducing the batch size because I found that I could increase the overall accuracy of the predictions.
 
 -Alex
 
