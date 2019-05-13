@@ -36,7 +36,7 @@ The original data is calibrated HDR imagery. It has a high dynamic range, with m
 
 This is where things become more interesting. At this point, one might be asking why use a Dense layers rather than a typical conv net architecture?
 
-The answer lies in induced data bias while training.  The images are rather large, at 696x464 pixels, a batch size on my machine is 5 images.  Each batch consists of only 5 lighting positions, and this doesn't represent the training data very well, both in terms of input values such as lighting position, but also the resulting image.  When we compare the feature distribution of two batches of equal data size, the batch with a smaller window size much better represents the range of input values.  The plots below compare feature distribution of a single batch of window sizes of 64x64 and 1x1. The features 0 and 2 correspond to light and pixel positions respectively.
+The answer lies in induced data bias while training.  The images are rather large, at 696x464 pixels, a batch size on my machine is 1 or 2 images.  Each batch consists of only a few lighting positions.  This doesn't represent the training data both in terms of input values such as lighting position or the resulting image.  When we compare the feature distribution of two batches of equal data size, the batch with a smaller window size much better represents the range of input values.  The plots below compare feature distribution of a single batch of window sizes of 64x64 and 1x1. The features 0 and 2 correspond to light and pixel positions respectively.
 
 <img style="float: center;" src=./documents/features_0_per_batch.png>
 <img style="float: center;" src=./documents/features_2_per_batch.png>
