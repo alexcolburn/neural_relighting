@@ -109,7 +109,7 @@ def create_per_pixel_model(input_size, output_size,
                            dropout=0.0,
                            bn=False,
                            leaky=False):
-    ar = regularizers.l2(1e-6)
+    ar = None  # regularizers.l2(1e-6)
     kr = None  # regularizers.l2(1e-6)
     br = None  # regularizers.l2(1e-6)
 
@@ -211,7 +211,7 @@ def train_per_pixel_model(data, epochs=1000, batch_size=5000, batch_reductions=4
     def luminance(rgb):
         return K.sqrt(0.299 * K.square(rgb[:, 0]) + 0.587 * K.square(rgb[:, 1]) + 0.114 * K.square(rgb[:, 2]))
 
-    def my_loss(y_true, y_pred):
+    def combined_loss(y_true, y_pred):
 
         lum_true = luminance(y_true)
         lum_pred = luminance(y_pred)
@@ -221,7 +221,7 @@ def train_per_pixel_model(data, epochs=1000, batch_size=5000, batch_reductions=4
 
     opt = keras.optimizers.Adam(lr=initial_lrate)
     model.compile(optimizer=opt,
-                  loss=my_loss,
+                  loss=combined_loss,
                   metrics=['mse', relative_err])
     model.summary()
 
