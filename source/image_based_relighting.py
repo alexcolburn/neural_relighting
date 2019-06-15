@@ -53,10 +53,6 @@ def exposure_compensate4_22(rgb_color):
     return exposure_compensate(rgb_color, 4, 2.2)
 
 
-def exposure_compensate5_22(rgb_color):
-    """ docstring """
-    return exposure_compensate(rgb_color, 5.0, 2.2)
-
 
 # relative error use in Peiran Ren, Yue Dong, Stephen Lin, Xin Tong, and Baining Guo.
 # 2015. Image based relighting using neural networks.
